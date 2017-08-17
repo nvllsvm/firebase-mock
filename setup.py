@@ -19,11 +19,17 @@ def read_requirements(name):
 
 setuptools.setup(
     name='firebasemock',
-    version='0.0.1',
+    version='0.0.2',
     url='https://github.com/nvllsvm/firebase-mock',
-    packages=['firebasemock'],
+    packages=setuptools.find_packages(exclude=['tests.*']),
     test_suite='nose.collector',
     install_requires=read_requirements('installation.txt'),
     entry_points={'console_scripts':
                   ['firebasemock=firebasemock.app:run']},
+    classifiers=[
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3.6',
+        'Development Status :: 3 - Alpha']
 )
