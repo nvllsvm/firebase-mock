@@ -199,6 +199,20 @@ class FirebaseTests(BaseTest):
             401,
             firebase.SendMessageHandler.invalid_authorization)
 
+    def test_none_token(self):
+        self.validate_error(
+            self.request(
+                json.dumps({'to': None}),
+                headers={'Authorization': self.get_auth_header()}),
+            400, 'to')
+
+    def test_nonstring_token(self):
+        self.validate_error(
+            self.request(
+                json.dumps({'to': 3}),
+                headers={'Authorization': self.get_auth_header()}),
+            400, 'Field "to" must be a JSON string: 3')
+
 
 class HelperTests(unittest.TestCase):
     def test_generate_message_id(self):

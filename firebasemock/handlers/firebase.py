@@ -57,7 +57,12 @@ class SendMessageHandler(base.BaseHandler):
             self.send_error(200, 'Error=MissingRegistration')
 
         data = json.loads(self.request.body)
-        token = data['to']
+
+        token = data.get('to')
+        if token is None:
+            self.send_error(400, 'to')
+        if not isinstance(token, str):
+            self.send_error(400, f'Field "to" must be a JSON string: {token}')
 
         response = {'canonical_ids': 0,
                     'multicast_id': helpers.generate_multicast_id()}
