@@ -53,9 +53,11 @@ class AdminTests(BaseTest):
     def test_reset(self):
         self._app.shared['fcm'].add('testsauce')
         new_state = helpers.new_shared_state()
+        original_id = id(self._app.shared)
         self.assertNotEqual(self._app.shared, new_state)
         self.fetch('/reset')
         self.assertEqual(self._app.shared, new_state)
+        self.assertEqual(original_id, id(self._app.shared))
 
 
 class IIDTests(BaseTest):
