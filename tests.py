@@ -1,10 +1,11 @@
-import json
 from unittest import mock
+import json
+import unittest
 
 from tornado import testing
 
 from firebasemock import app, helpers
-from firebasemock.handlers import iid
+from firebasemock.handlers import firebase, iid
 
 
 class BaseTest(testing.AsyncHTTPTestCase):
@@ -27,6 +28,11 @@ class BaseTest(testing.AsyncHTTPTestCase):
     def setUp(self):
         super().setUp()
         self.fetch('/reset')
+
+    def get_auth_header(self):
+        key = 'test'
+        self._app.shared['authorization'].add(key)
+        return f'key={key}'
 
 
 class AdminTests(BaseTest):
@@ -53,11 +59,6 @@ class AdminTests(BaseTest):
 
 
 class IIDTests(BaseTest):
-    def get_auth_header(self):
-        key = 'test'
-        self._app.shared['authorization'].add(key)
-        return f'key={key}'
-
     def get_app(self):
         return app.make_mock_iid_app()
 
@@ -119,3 +120,103 @@ class IIDTests(BaseTest):
                           'registration_token': mock_token.return_value},
                          {'apns_token': 'def',
                           'status': 'INVALID_ARGUMENT'}]})
+
+
+class FirebaseTests(BaseTest):
+    def get_app(self):
+        return app.make_mock_firebase_app()
+
+    def request(self, body, headers=None):
+        return self.fetch('/fcm/send', method='POST', body=body,
+                          headers=headers or {})
+
+    def validate_error(self, response, status_code, body):
+        self.assertEqual(response.code, status_code)
+        self.assertEqual(response.text, body)
+
+    @mock.patch('firebasemock.helpers.generate_multicast_id')
+    def test_invalid_fcm_token(self, multicast_mock):
+        multicast_mock.return_value = 123
+        response = self.request(
+            json.dumps({'to': 'xxx'}),
+            headers={'Authorization': self.get_auth_header()})
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.json, {
+            'canonical_ids': 0,
+            'failure': 1,
+            'success': 0,
+            'multicast_id': multicast_mock.return_value,
+            'results': [{'error': 'InvalidRegistration'}]
+        })
+
+    @mock.patch('firebasemock.helpers.generate_message_id')
+    @mock.patch('firebasemock.helpers.generate_multicast_id')
+    def test_send_message(self, multicast_mock, message_mock):
+        token = 'aabbccdd'
+        self._app.shared['fcm'].add(token)
+
+        multicast_mock.return_value = 123
+        message_mock.return_value = 456
+        response = self.request(
+            json.dumps({'to': token}),
+            headers={'Authorization': self.get_auth_header()})
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.json, {
+            'canonical_ids': 0,
+            'failure': 0,
+            'success': 1,
+            'multicast_id': multicast_mock.return_value,
+            'results': [{'message_id': message_mock.return_value}]
+        })
+
+    def test_no_body(self):
+        response = self.request(
+            '', headers={'Authorization': self.get_auth_header()})
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.text, 'Error=MissingRegistration')
+
+    def test_missing_authorization_header(self):
+        response = self.request('')
+        self.validate_error(
+            response, 401,
+            firebase.SendMessageHandler.missing_authorization)
+
+    def test_invalid_authorization_header(self):
+        self.validate_error(
+            self.request('', headers={'Authorization': 'ha'}),
+            401,
+            firebase.SendMessageHandler.missing_authorization)
+
+    def test_auth_splits_to_not_key(self):
+        self.validate_error(
+            self.request('', headers={'Authorization': 'no=no'}),
+            401,
+            firebase.SendMessageHandler.missing_authorization)
+
+    def test_invalid_authorization_key(self):
+        self.validate_error(
+            self.request('', headers={'Authorization': 'key=no'}),
+            401,
+            firebase.SendMessageHandler.invalid_authorization)
+
+
+class HelperTests(unittest.TestCase):
+    def test_generate_message_id(self):
+        self.validate_output(str, helpers.generate_message_id)
+
+    def test_generate_apns_token(self):
+        self.validate_output(str, helpers.generate_apns_token)
+
+    def test_generate_application_name(self):
+        self.validate_output(str, helpers.generate_application_name)
+
+    def test_generate_fcm_token(self):
+        self.validate_output(str, helpers.generate_fcm_token)
+
+    def test_generate_multicast_id(self):
+        self.validate_output(int, helpers.generate_multicast_id)
+
+    def validate_output(self, output_type, function):
+        output = function()
+        self.assertIsInstance(output, output_type)
+        self.assertGreater(len(str(output)), 0)
