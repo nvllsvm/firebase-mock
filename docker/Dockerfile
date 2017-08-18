@@ -8,5 +8,6 @@ RUN apk --update add curl python3 && \
 
 EXPOSE 8000
 EXPOSE 8001
+EXPOSE 8002
 
 CMD firebasemock
