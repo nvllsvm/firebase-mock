@@ -64,6 +64,8 @@ class SendMessageHandler(base.BaseHandler):
         if not isinstance(token, str):
             self.send_error(400, f'Field "to" must be a JSON string: {token}')
 
+        self.shared['messages'].append(data)
+
         response = {'canonical_ids': 0,
                     'multicast_id': helpers.generate_multicast_id()}
         if token in self.shared['fcm']:

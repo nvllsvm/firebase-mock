@@ -27,11 +27,12 @@ class BaseTest(testing.AsyncHTTPTestCase):
 
     def setUp(self):
         super().setUp()
-        self.fetch('/reset')
+        self.shared = self._app.shared
+        helpers.new_shared_state(self.shared)
 
     def get_auth_header(self):
         key = 'test'
-        self._app.shared['authorization'].add(key)
+        self.shared['authorization'].add(key)
         return f'key={key}'
 
 
@@ -43,21 +44,34 @@ class AdminTests(BaseTest):
         for key in ('authorization', 'fcm', 'apns'):
             response = self.fetch(f'/generate/{key}')
             self.assertEqual(response.code, 200)
-            self.assertEqual(self._app.shared[key],
+            self.assertEqual(self.shared[key],
                              set([response.text]))
 
     def test_add_multiple_tokens(self):
         tokens = set([self.fetch(f'/generate/fcm').text for i in range(3)])
-        self.assertEqual(self._app.shared['fcm'], tokens)
+        self.assertEqual(self.shared['fcm'], tokens)
 
     def test_reset(self):
-        self._app.shared['fcm'].add('testsauce')
+        self.shared['fcm'].add('testsauce')
         new_state = helpers.new_shared_state()
-        original_id = id(self._app.shared)
-        self.assertNotEqual(self._app.shared, new_state)
+        original_id = id(self.shared)
+        self.assertNotEqual(self.shared, new_state)
         self.fetch('/reset')
-        self.assertEqual(self._app.shared, new_state)
-        self.assertEqual(original_id, id(self._app.shared))
+        self.assertEqual(self.shared, new_state)
+        self.assertEqual(original_id, id(self.shared))
+
+    def test_get_sent_messages(self):
+        def get_messages(expected):
+            self.assertEqual(self.fetch('/messages').json, expected)
+
+        get_messages({'messages': []})
+
+        expected = [{'to': 'me'},
+                    {'to': 'you'}]
+        self.shared['messages'] = expected
+        get_messages({'messages': expected})
+
+        get_messages({'messages': []})
 
 
 class IIDTests(BaseTest):
@@ -107,7 +121,7 @@ class IIDTests(BaseTest):
     def test_tokens(self, mock_token):
         mock_token.return_value = 'idkfa'
 
-        self._app.shared['apns'] = ['abc']
+        self.shared['apns'] = ['abc']
         body = {'application': 'test',
                 'sandbox': True,
                 'apns_tokens': ['abc', 'def']}
@@ -155,12 +169,13 @@ class FirebaseTests(BaseTest):
     @mock.patch('firebasemock.helpers.generate_multicast_id')
     def test_send_message(self, multicast_mock, message_mock):
         token = 'aabbccdd'
-        self._app.shared['fcm'].add(token)
+        self.shared['fcm'].add(token)
 
         multicast_mock.return_value = 123
         message_mock.return_value = 456
+        payload = {'to': token}
         response = self.request(
-            json.dumps({'to': token}),
+            json.dumps(payload),
             headers={'Authorization': self.get_auth_header()})
         self.assertEqual(response.code, 200)
         self.assertEqual(response.json, {
@@ -170,6 +185,7 @@ class FirebaseTests(BaseTest):
             'multicast_id': multicast_mock.return_value,
             'results': [{'message_id': message_mock.return_value}]
         })
+        self.assertEqual(self.shared['messages'], [payload])
 
     def test_no_body(self):
         response = self.request(

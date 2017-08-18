@@ -76,7 +76,15 @@ def generate_application_name():
         random_alpha(3), random_alpha(5), random_alpha(10)).lower()
 
 
-def new_shared_state():
-    return {'authorization': set(),
-            'fcm': set(),
-            'apns': set()}
+def new_shared_state(state=None):
+    if state is None:
+        state = {}
+
+    state.clear()
+    state.update({
+        'authorization': set(),
+        'fcm': set(),
+        'apns': set(),
+        'messages': []})
+
+    return state

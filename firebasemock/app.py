@@ -17,6 +17,7 @@ def make_app(urls):
 def make_mock_admin_app():
     return make_app([
         ('/generate/(.*)', admin.GenerateHandler),
+        ('/messages', admin.MessagesHandler),
         ('/reset', admin.ResetHandler)
     ])
 

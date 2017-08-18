@@ -20,3 +20,9 @@ class ResetHandler(base.BaseHandler):
     def get(self):
         self.shared.clear()
         self.shared.update(helpers.new_shared_state())
+
+
+class MessagesHandler(base.BaseHandler):
+    def get(self):
+        self.write({'messages': self.shared['messages']})
+        self.shared['messages'] = []
