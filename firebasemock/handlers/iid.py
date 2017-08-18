@@ -1,7 +1,5 @@
 import json
 
-from tornado import web
-
 from firebasemock import helpers
 from firebasemock.handlers import base
 
@@ -15,34 +13,25 @@ class BatchImportHandler(base.BaseHandler):
         try:
             authorization = self.request.headers['Authorization']
         except KeyError:
-            self.send_bad_auth_response()
+            self.send_error(401, self.error_authorization)
 
         try:
             key, token = authorization.split('=', maxsplit=1)
         except ValueError:
-            self.send_bad_auth_response()
+            self.send_error(401, self.error_authorization)
 
         if key != 'key' or token not in self.shared['authorization']:
-            self.send_bad_auth_response()
-
-    def send_bad_auth_response(self):
-        self.write(self.error_authorization)
-        self.set_status(401)
-        raise web.Finish
+            self.send_error(401, self.error_authorization)
 
     def post(self):
         try:
             data = json.loads(self.request.body)
         except json.JSONDecodeError:
-            self.write(self.error_content_type)
-            self.set_status(400)
-            raise web.Finish
+            self.send_error(400, self.error_content_type)
 
         if not data.get('application') or data.get('sandbox') not in (True,
                                                                       False):
-            self.write(self.error_malformed_request)
-            self.set_status(400)
-            raise web.Finish
+            self.send_error(400, self.error_malformed_request)
 
         results = []
         for token in data['apns_tokens']:
