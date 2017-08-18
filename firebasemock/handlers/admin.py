@@ -18,4 +18,5 @@ class GenerateHandler(base.BaseHandler):
 
 class ResetHandler(base.BaseHandler):
     def get(self):
-        self.application.shared = helpers.new_shared_state()
+        self.shared.clear()
+        self.shared.update(helpers.new_shared_state())
