@@ -24,7 +24,8 @@ def make_mock_admin_app():
 
 def make_mock_iid_app():
     return make_app([
-        ('/iid/v1:batchImport', iid.BatchImportHandler)
+        ('/iid/v1:batchImport', iid.BatchImportHandler),
+        ('/iid/v1%3AbatchImport', iid.BatchImportHandler)
     ])
 
 

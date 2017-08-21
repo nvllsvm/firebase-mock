@@ -82,6 +82,11 @@ class IIDTests(BaseTest):
     def get_app(self):
         return app.make_mock_iid_app()
 
+    def test_encoding(self):
+        response = self.fetch('/iid/v1%3AbatchImport', method='POST',
+                              headers={}, body='')
+        self.assertEqual(response.code, 401)
+
     def request(self, body, headers={}):
         response = self.fetch('/iid/v1:batchImport', method='POST',
                               headers=headers, body=body)
