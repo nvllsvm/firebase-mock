@@ -40,16 +40,20 @@ class AdminTests(BaseTest):
     def get_app(self):
         return app.make_mock_admin_app()
 
+    def test_default_keys(self):
+        for key in ('authorization', 'fcm', 'apns'):
+            self.assertIn(f'firebasemock_{key}', self.shared[key])
+
     def test_token_generation(self):
         for key in ('authorization', 'fcm', 'apns'):
             response = self.fetch(f'/generate/{key}')
             self.assertEqual(response.code, 200)
-            self.assertEqual(self.shared[key],
-                             set([response.text]))
+            self.assertIn(response.text, self.shared[key])
 
     def test_add_multiple_tokens(self):
-        tokens = set([self.fetch(f'/generate/fcm').text for i in range(3)])
-        self.assertEqual(self.shared['fcm'], tokens)
+        tokens = set([self.fetch('/generate/fcm').text for i in range(3)])
+        for token in tokens:
+            self.assertIn(token, self.shared['fcm'])
 
     def test_reset(self):
         self.shared['fcm'].add('testsauce')

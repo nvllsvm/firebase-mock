@@ -82,9 +82,9 @@ def new_shared_state(state=None):
 
     state.clear()
     state.update({
-        'authorization': set(),
-        'fcm': set(),
-        'apns': set(),
+        'authorization': {'firebasemock_authorization'},
+        'fcm': {'firebasemock_fcm'},
+        'apns': {'firebasemock_apns'},
         'messages': []})
 
     return state
