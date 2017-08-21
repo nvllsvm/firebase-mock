@@ -145,6 +145,7 @@ class IIDTests(BaseTest):
                           'registration_token': mock_token.return_value},
                          {'apns_token': 'def',
                           'status': 'INVALID_ARGUMENT'}]})
+        self.assertIn(mock_token.return_value, self.shared['fcm'])
 
 
 class FirebaseTests(BaseTest):

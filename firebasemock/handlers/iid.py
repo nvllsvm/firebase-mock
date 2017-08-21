@@ -40,7 +40,7 @@ class BatchImportHandler(base.BaseHandler):
                 result['status'] = 'INVALID_ARGUMENT'
             else:
                 fcm_token = helpers.generate_fcm_token()
-                self.shared['fcm'] = fcm_token
+                self.shared['fcm'].add(fcm_token)
                 result['registration_token'] = fcm_token
                 result['status'] = 'OK'
 
