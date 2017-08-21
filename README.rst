@@ -1,6 +1,8 @@
 firebase-mock
 =============
 
+**NOTE:** This is alpha quality and is subject to drastic change.
+
 Mock HTTP API's of the Google Firebase and Google Instance ID (IID) services.
 
 Python 3.6+ only.
