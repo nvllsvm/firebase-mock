@@ -19,7 +19,7 @@ def read_requirements(name):
 
 setuptools.setup(
     name='firebasemock',
-    version='0.0.9',
+    version='0.0.10',
     url='https://github.com/nvllsvm/firebase-mock',
     packages=setuptools.find_packages(exclude=['tests.*']),
     test_suite='nose.collector',
