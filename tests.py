@@ -148,7 +148,7 @@ class IIDTests(BaseTest):
         self.assertIn(mock_token.return_value, self.shared['fcm'])
 
 
-class FirebaseTests(BaseTest):
+class FirebaseBase(BaseTest):
     def get_app(self):
         return app.make_mock_firebase_app()
 
@@ -160,6 +160,8 @@ class FirebaseTests(BaseTest):
         self.assertEqual(response.code, status_code)
         self.assertEqual(response.text, body)
 
+
+class FirebaseTests(FirebaseBase):
     @mock.patch('firebasemock.helpers.generate_multicast_id')
     def test_invalid_fcm_token(self, multicast_mock):
         multicast_mock.return_value = 123
@@ -227,19 +229,43 @@ class FirebaseTests(BaseTest):
             401,
             firebase.SendMessageHandler.invalid_authorization)
 
-    def test_none_token(self):
+
+class FirebaseTokenParsing(FirebaseBase):
+    def test_missing_token_fields(self):
+        self.validate_error(
+            self.request(
+                json.dumps({}),
+                headers={'Authorization': self.get_auth_header()}),
+            400, 'to')
+
+    def test_both_token_fields(self):
+        self.validate_error(
+            self.request(
+                json.dumps({'to': 'abc',
+                            'registration_ids': ['abc']}),
+                headers={'Authorization': self.get_auth_header()}),
+            400, 'Must use either "registration_ids" field or "to", not both')
+
+    def test_none_to(self):
         self.validate_error(
             self.request(
                 json.dumps({'to': None}),
                 headers={'Authorization': self.get_auth_header()}),
             400, 'to')
 
-    def test_nonstring_token(self):
+    def test_nonstring_to(self):
         self.validate_error(
             self.request(
                 json.dumps({'to': 3}),
                 headers={'Authorization': self.get_auth_header()}),
             400, 'Field "to" must be a JSON string: 3')
+
+    def test_nonlist_registration_ids(self):
+        self.validate_error(
+            self.request(
+                json.dumps({'registration_ids': 3}),
+                headers={'Authorization': self.get_auth_header()}),
+            400, '"registration_ids" field cannot be empty')
 
 
 class HelperTests(unittest.TestCase):

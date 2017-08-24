@@ -58,27 +58,53 @@ class SendMessageHandler(base.BaseHandler):
 
         data = json.loads(self.request.body)
 
-        token = data.get('to')
-        if token is None:
-            self.send_error(400, 'to')
-        if not isinstance(token, str):
-            self.send_error(400, f'Field "to" must be a JSON string: {token}')
-
         self.shared['messages'].append(data)
 
         response = {'canonical_ids': 0,
+                    'failure': 0,
+                    'success': 0,
+                    'results': [],
                     'multicast_id': helpers.generate_multicast_id()}
-        if token in self.shared['fcm']:
-            response.update({
-                'failure': 0,
-                'success': 1,
-                'results': [{'message_id': helpers.generate_message_id()}]
-            })
-        else:
-            response.update({
-                'failure': 1,
-                'success': 0,
-                'results': [{'error': 'InvalidRegistration'}]
-            })
+
+        for token in self._get_tokens(data):
+            if token in self.shared['fcm']:
+                response['success'] += 1
+                response['results'].append({
+                    'message_id': helpers.generate_message_id()})
+            else:
+                response['failure'] += 1
+                response['results'].append({
+                    'error': 'InvalidRegistration'})
 
         self.write(response)
+
+    def _get_tokens(self, data):
+        # Firebase error handling is inconsistent...
+
+        to = data.get('to')
+        registration_ids = data.get('registration_ids')
+
+        if to is None and registration_ids is None:
+            self.send_error(400, 'to')
+
+        if to is not None:
+            if not isinstance(to, str):
+                self.send_error(400,
+                                f'Field "to" must be a JSON string: {to}')
+            else:
+                tokens = []
+                tokens.append(to)
+
+        if registration_ids is not None:
+            if not isinstance(registration_ids, list):
+                self.send_error(400,
+                                '"registration_ids" field cannot be empty')
+            else:
+                tokens = registration_ids
+
+        if None not in (to, registration_ids):
+            self.send_error(
+                400,
+                'Must use either "registration_ids" field or "to", not both')
+
+        return tokens
