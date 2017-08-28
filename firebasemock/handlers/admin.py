@@ -6,6 +6,7 @@ class GenerateHandler(base.BaseHandler):
     function_map = {
         'authorization': helpers.generate_authorization_key,
         'fcm': helpers.generate_fcm_token,
+        'unregistered_fcm': helpers.generate_fcm_token,
         'apns': helpers.generate_apns_token,
         'application': helpers.generate_application_name
     }

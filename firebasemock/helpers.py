@@ -77,6 +77,7 @@ def generate_application_name():
 
 
 def new_shared_state(state=None):
+    # so we retain the original object instance
     if state is None:
         state = {}
 
@@ -84,6 +85,7 @@ def new_shared_state(state=None):
     state.update({
         'authorization': {'firebasemock_authorization'},
         'fcm': {'firebasemock_fcm'},
+        'unregistered_fcm': {'firebasemock_unregistered_fcm'},
         'apns': {'firebasemock_apns'},
         'messages': []})
 

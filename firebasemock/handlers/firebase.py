@@ -71,6 +71,10 @@ class SendMessageHandler(base.BaseHandler):
                 response['success'] += 1
                 response['results'].append({
                     'message_id': helpers.generate_message_id()})
+            elif token in self.shared['unregistered_fcm']:
+                response['failure'] += 1
+                response['results'].append({
+                    'error': 'NotRegistered'})
             else:
                 response['failure'] += 1
                 response['results'].append({
