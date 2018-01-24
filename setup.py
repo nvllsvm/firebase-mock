@@ -33,7 +33,7 @@ setuptools.setup(
                   ['firebasemock=firebasemock.app:run']},
     classifiers=[
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.6',
         'Development Status :: 3 - Alpha']
