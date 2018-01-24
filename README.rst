@@ -3,7 +3,7 @@ firebase-mock
 
 |Version| |Docker| |Status| |License|
 
-Mock HTTP API's of the Google Firebase and Google Instance ID (IID) services.
+Mock HTTP implementations of Google Firebase and Google Instance ID.
 
 
 .. |Version| image:: https://img.shields.io/pypi/v/firebasemock.svg?

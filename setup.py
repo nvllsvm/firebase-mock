@@ -4,6 +4,11 @@ import setuptools
 setuptools.setup(
     name='firebasemock',
     version='0.0.11',
+    author='Andrew Rabert',
+    description=(
+        'Mock HTTP implementations of Google Firebase and '
+        'Google Instance ID.'
+    ),
     url='https://github.com/nvllsvm/firebase-mock',
     packages=setuptools.find_packages(exclude=['tests.*']),
     test_suite='nose.collector',
