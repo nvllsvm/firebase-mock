@@ -24,6 +24,11 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=['tests.*']),
     test_suite='nose.collector',
     install_requires=read_requirements('installation.txt'),
+    setup_requires=['pytest-runner'],
+    tests_require=[
+        'pytest',
+        'pytest-cov'
+    ],
     entry_points={'console_scripts':
                   ['firebasemock=firebasemock.app:run']},
     classifiers=[
