@@ -1,3 +1,6 @@
+**DEPRECATED** - This only supports the legacy Firebase HTTP and there are no intentions to support the new Firebase HTTP v1 API. 
+
+
 firebase-mock
 =============
 
